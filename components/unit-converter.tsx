@@ -17,6 +17,7 @@ import { unitTypeAtom, fromUnitAtom, toUnitAtom } from "@/lib/atoms"
 import { convertUnit } from "@/lib/converter"
 import { UNIT_TYPES } from "@/constants/unit-types"
 import { QUERY_PARAMS } from "@/constants/query-params"
+import { UnitType } from "@/types"
 
 // Server-side validation schema
 const formSchema = z.object({
@@ -301,7 +302,7 @@ export default function UnitConverter() {
   )
 }
 
-function UnitOptions({ type }: { type: string }) {
+function UnitOptions({ type }: { type: UnitType }) {
   switch (type) {
     case UNIT_TYPES.LENGTH:
       return (
