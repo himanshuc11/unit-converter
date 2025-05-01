@@ -51,7 +51,6 @@ export default function UnitConverter() {
   const [result, setResult] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
-
   // Initialize state from URL params
   useEffect(() => {
     setUnitType(initialUnitType)
@@ -82,13 +81,25 @@ export default function UnitConverter() {
   // Update URL with current state
   const updateUrl = (type: string, value: number, from: string, to: string) => {
     const params = new URLSearchParams()
-    if (type) params.set(QUERY_PARAMS.TYPE, type)
-    if (value) params.set(QUERY_PARAMS.VALUE, value.toString())
-    if (from) params.set(QUERY_PARAMS.FROM, from)
-    if (to) params.set(QUERY_PARAMS.TO, to)
+
+    !!type ? params.set(QUERY_PARAMS.TYPE, type) : params.delete(QUERY_PARAMS.TYPE)
+    !!value ? params.set(QUERY_PARAMS.VALUE, value.toString()) : params.delete(QUERY_PARAMS.VALUE)
+    !!from ? params.set(QUERY_PARAMS.FROM, from) : params.delete(QUERY_PARAMS.FROM)
+    !!to ? params.set(QUERY_PARAMS.TO, to) : params.delete(QUERY_PARAMS.TO)
 
     // Replace current URL with new params
     router.replace(`?${params.toString()}`, { scroll: false })
+  }
+
+
+
+  const resetFormAndUrl = (tab: string) => {
+    form.reset({
+      fromValue: 0,
+      fromUnit: "",
+      toUnit: ""
+    })
+    updateUrl(tab, 0, "", "")
   }
 
   // Perform initial conversion if all parameters are present
@@ -133,7 +144,10 @@ export default function UnitConverter() {
         <Tabs
           defaultValue={initialUnitType}
           value={unitType}
-          onValueChange={(value) => setUnitType(value)}
+          onValueChange={(value) => {
+            setUnitType(value)
+            resetFormAndUrl(value)
+          }}
           className="w-full"
         >
           <TabsList className="grid grid-cols-4 mb-6">
