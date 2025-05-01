@@ -15,6 +15,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { unitTypeAtom, fromUnitAtom, toUnitAtom } from "@/lib/atoms"
 import { convertUnit } from "@/lib/converter"
+import { UNIT_TYPES } from "@/constants/unit-types"
+import { QUERY_PARAMS } from "@/constants/query-params"
 
 // Server-side validation schema
 const formSchema = z.object({
@@ -35,10 +37,10 @@ export default function UnitConverter() {
   const searchParams = useSearchParams()
 
   // Get initial values from URL if available
-  const initialUnitType = searchParams.get("type") || "length"
-  const initialFromValue = searchParams.get("value") ? Number.parseFloat(searchParams.get("value") as string) : 0
-  const initialFromUnit = searchParams.get("from") || ""
-  const initialToUnit = searchParams.get("to") || ""
+  const initialUnitType = searchParams.get(QUERY_PARAMS.TYPE) || UNIT_TYPES.LENGTH
+  const initialFromValue = searchParams.get(QUERY_PARAMS.VALUE) ? Number.parseFloat(searchParams.get(QUERY_PARAMS.FROM) as string) : 0
+  const initialFromUnit = searchParams.get(QUERY_PARAMS.FROM) || ""
+  const initialToUnit = searchParams.get(QUERY_PARAMS.TO) || ""
 
   const [unitType, setUnitType] = useAtom(unitTypeAtom)
   const [fromUnit, setFromUnit] = useAtom(fromUnitAtom)
@@ -91,10 +93,10 @@ export default function UnitConverter() {
   // Update URL with current state
   const updateUrl = (type: string, value: number, from: string, to: string) => {
     const params = new URLSearchParams()
-    params.set("type", type)
-    params.set("value", value.toString())
-    if (from) params.set("from", from)
-    if (to) params.set("to", to)
+    params.set(QUERY_PARAMS.TYPE, type)
+    if (value) params.set(QUERY_PARAMS.VALUE, value.toString())
+    if (from) params.set(QUERY_PARAMS.FROM, from)
+    if (to) params.set(QUERY_PARAMS.TO, to)
 
     // Replace current URL with new params
     router.replace(`?${params.toString()}`, { scroll: false })
@@ -146,10 +148,10 @@ export default function UnitConverter() {
           className="w-full"
         >
           <TabsList className="grid grid-cols-4 mb-6">
-            <TabsTrigger value="length">Length</TabsTrigger>
-            <TabsTrigger value="temperature">Temperature</TabsTrigger>
-            <TabsTrigger value="weight">Weight</TabsTrigger>
-            <TabsTrigger value="currency">Currency</TabsTrigger>
+            <TabsTrigger value={UNIT_TYPES.LENGTH}>Length</TabsTrigger>
+            <TabsTrigger value={UNIT_TYPES.TEMPERATURE}>Temperature</TabsTrigger>
+            <TabsTrigger value={UNIT_TYPES.WEIGHT}>Weight</TabsTrigger>
+            <TabsTrigger value={UNIT_TYPES.CURRENCY}>Currency</TabsTrigger>
           </TabsList>
 
           <Form {...form}>
@@ -166,7 +168,7 @@ export default function UnitConverter() {
               method="get"
             >
               {/* Hidden inputs for non-JS form submission */}
-              <input type="hidden" name="type" value={unitType} />
+              <input type="hidden" name={QUERY_PARAMS.TYPE} value={unitType} />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField
@@ -181,7 +183,7 @@ export default function UnitConverter() {
                         <Input
                           placeholder="Enter value"
                           {...field}
-                          name="value"
+                          name={QUERY_PARAMS.VALUE}
                           onChange={(e) => {
                             field.onChange(e)
                             // Auto-convert on value change if both units are selected
@@ -217,7 +219,7 @@ export default function UnitConverter() {
                           }
                         }}
                         value={fromUnit}
-                        name="from"
+                        name={QUERY_PARAMS.FROM}
                       >
                         <FormControl>
                           <SelectTrigger className={form.formState.errors.fromUnit ? "border-destructive" : ""}>
@@ -252,7 +254,7 @@ export default function UnitConverter() {
                         }
                       }}
                       value={toUnit}
-                      name="to"
+                      name={QUERY_PARAMS.TO}
                     >
                       <FormControl>
                         <SelectTrigger className={form.formState.errors.toUnit ? "border-destructive" : ""}>
@@ -301,7 +303,7 @@ export default function UnitConverter() {
 
 function UnitOptions({ type }: { type: string }) {
   switch (type) {
-    case "length":
+    case UNIT_TYPES.LENGTH:
       return (
         <>
           <SelectItem value="mm">Millimeter (mm)</SelectItem>
@@ -314,7 +316,7 @@ function UnitOptions({ type }: { type: string }) {
           <SelectItem value="mi">Mile (mi)</SelectItem>
         </>
       )
-    case "temperature":
+    case UNIT_TYPES.TEMPERATURE:
       return (
         <>
           <SelectItem value="c">Celsius (°C)</SelectItem>
@@ -322,7 +324,7 @@ function UnitOptions({ type }: { type: string }) {
           <SelectItem value="k">Kelvin (K)</SelectItem>
         </>
       )
-    case "weight":
+    case UNIT_TYPES.WEIGHT:
       return (
         <>
           <SelectItem value="mg">Milligram (mg)</SelectItem>
@@ -334,7 +336,7 @@ function UnitOptions({ type }: { type: string }) {
           <SelectItem value="st">Stone (st)</SelectItem>
         </>
       )
-    case "currency":
+    case UNIT_TYPES.CURRENCY:
       return (
         <>
           <SelectItem value="USD">US Dollar (USD)</SelectItem>
