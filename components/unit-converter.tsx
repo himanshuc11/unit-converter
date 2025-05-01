@@ -40,9 +40,10 @@ export default function UnitConverter() {
 
   // Get initial values from URL if available
   const initialUnitType = searchParams.get(QUERY_PARAMS.TYPE) || UNIT_TYPES.LENGTH
-  const initialFromValue = searchParams.get(QUERY_PARAMS.VALUE) ? Number.parseFloat(searchParams.get(QUERY_PARAMS.FROM) as string) : 0
+  const initialFromValue = searchParams.get(QUERY_PARAMS.VALUE) ? Number.parseFloat(searchParams.get(QUERY_PARAMS.VALUE) as string) : 0
   const initialFromUnit = searchParams.get(QUERY_PARAMS.FROM) || ""
   const initialToUnit = searchParams.get(QUERY_PARAMS.TO) || ""
+
 
   const [unitType, setUnitType] = useAtom(unitTypeAtom)
   const [fromUnit, setFromUnit] = useAtom(fromUnitAtom)
@@ -50,12 +51,13 @@ export default function UnitConverter() {
   const [result, setResult] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+
   // Initialize state from URL params
   useEffect(() => {
     setUnitType(initialUnitType)
     setFromUnit(initialFromUnit)
     setToUnit(initialToUnit)
-  }, [initialUnitType, initialFromUnit, initialToUnit, setUnitType, setFromUnit, setToUnit])
+  }, [searchParams])
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -64,22 +66,7 @@ export default function UnitConverter() {
       fromUnit: initialFromUnit,
       toUnit: initialToUnit,
     },
-  })
-
-  // Reset form when unit type changes
-  useEffect(() => {
-    form.reset({
-      fromValue: form.getValues("fromValue"),
-      fromUnit: "",
-      toUnit: "",
-    })
-    setFromUnit("")
-    setToUnit("")
-    setResult(null)
-
-    // Update URL
-    updateUrl(unitType, form.getValues("fromValue"), "", "")
-  }, [unitType, form])
+  });
 
   // Update form values when units change
   useEffect(() => {
@@ -95,7 +82,7 @@ export default function UnitConverter() {
   // Update URL with current state
   const updateUrl = (type: string, value: number, from: string, to: string) => {
     const params = new URLSearchParams()
-    params.set(QUERY_PARAMS.TYPE, type)
+    if (type) params.set(QUERY_PARAMS.TYPE, type)
     if (value) params.set(QUERY_PARAMS.VALUE, value.toString())
     if (from) params.set(QUERY_PARAMS.FROM, from)
     if (to) params.set(QUERY_PARAMS.TO, to)
