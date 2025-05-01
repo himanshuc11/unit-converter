@@ -1,3 +1,5 @@
+import { UNIT_TYPES } from "@/constants/unit-types"
+
 // Currency API endpoint
 const CURRENCY_API_URL = "https://api.exchangerate-api.com/v4/latest/"
 
@@ -82,19 +84,19 @@ async function fetchCurrencyRates(baseUnit: string): Promise<Record<string, numb
 // Main conversion function
 export async function convertUnit(unitType: string, fromUnit: string, toUnit: string, value: number): Promise<number> {
   // Validate input
-  if (unitType === "weight" || unitType === "length") {
+  if (unitType === UNIT_TYPES.WEIGHT || unitType === UNIT_TYPES.LENGTH) {
     if (value < 0) {
       throw new Error(`Negative ${unitType} values are not allowed`)
     }
   }
 
   // Handle temperature conversion (special case)
-  if (unitType === "temperature") {
+  if (unitType === UNIT_TYPES.TEMPERATURE) {
     return convertTemperature(fromUnit, toUnit, value)
   }
 
   // Handle currency conversion
-  if (unitType === "currency") {
+  if (unitType === UNIT_TYPES.CURRENCY) {
     const rates = await fetchCurrencyRates(fromUnit)
     return value * rates[toUnit]
   }
