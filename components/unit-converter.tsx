@@ -67,16 +67,6 @@ export default function UnitConverter() {
     },
   });
 
-  // Update form values when units change
-  useEffect(() => {
-    form.setValue("fromUnit", fromUnit)
-    form.setValue("toUnit", toUnit)
-
-    // Update URL when units change
-    if (fromUnit || toUnit) {
-      updateUrl(unitType, form.getValues("fromValue"), fromUnit, toUnit)
-    }
-  }, [fromUnit, toUnit, form, unitType])
 
   // Update URL with current state
   const updateUrl = (type: string, value: number, from: string, to: string) => {
@@ -90,7 +80,6 @@ export default function UnitConverter() {
     // Replace current URL with new params
     router.replace(`?${params.toString()}`, { scroll: false })
   }
-
 
 
   const resetFormAndUrl = (tab: string) => {
@@ -107,7 +96,6 @@ export default function UnitConverter() {
     if (initialFromValue && initialFromUnit && initialToUnit) {
       handleConversion(initialFromValue, initialFromUnit, initialToUnit)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialFromValue, initialFromUnit, initialToUnit])
 
   async function handleConversion(value: number, from: string, to: string) {
@@ -215,7 +203,9 @@ export default function UnitConverter() {
                       <Select
                         onValueChange={(value) => {
                           setFromUnit(value)
+                          form.setValue("fromUnit", value)
                           field.onChange(value)
+                          updateUrl(unitType, form.getValues("fromValue"), value, toUnit)
                           // Auto-convert if both units are selected and we have a value
                           if (toUnit && form.getValues("fromValue")) {
                             setTimeout(() => form.handleSubmit(onSubmit)(), 100)
@@ -250,7 +240,9 @@ export default function UnitConverter() {
                     <Select
                       onValueChange={(value) => {
                         setToUnit(value)
+                        form.setValue("toUnit", value)
                         field.onChange(value)
+                        updateUrl(unitType, form.getValues("fromValue"), fromUnit, value)
                         // Auto-convert if both units are selected and we have a value
                         if (fromUnit && form.getValues("fromValue")) {
                           setTimeout(() => form.handleSubmit(onSubmit)(), 100)
