@@ -10,23 +10,29 @@ import { Input } from "@/components/ui/input"
 import UnitOptions from './ui-options'
 import { LENGTH_OPTIONS } from '@/constants/options'
 import { useForm } from 'react-hook-form'
+import { PageProps } from '@/app/page'
+import { UnitType } from '@/types'
+import { convertUnit } from '@/lib/converter'
 
-type Props = {
-    tabProps: React.ComponentPropsWithoutRef<typeof Tabs>
-}
 
 const Option = ({children}: {children: React.ReactElement}) => {
     return <option className= "relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">{children}</option>
 }
 
-function ServerOnly(props: Props) {
-    const { tabProps } = props;
+async function ServerOnly(props: PageProps) {
+    const { requiredParam: searchParams } = props
 
-    const calculatedSchema = getCalculatedSchemaForValidation("")
+    const type = searchParams?.[QUERY_PARAMS.TYPE]?.toUpperCase() as keyof typeof UNIT_TYPES;
+    const unitType =  type && UNIT_TYPES[type] !== undefined 
+            ? UNIT_TYPES[type] as UnitType 
+            : UNIT_TYPES.LENGTH;
 
-    const unitType = UNIT_TYPES.LENGTH
-    const fromUnit = LENGTH_OPTIONS.mm
-    const toUnit = LENGTH_OPTIONS.cm
+    const fromUnit = searchParams?.[QUERY_PARAMS.FROM] as string
+    const toUnit = searchParams?.[QUERY_PARAMS.TO] as string
+    const value = parseFloat(searchParams?.[QUERY_PARAMS.VALUE] as string)
+
+    let result =  await convertUnit(unitType, fromUnit, toUnit, value)
+    const calculatedSchema = getCalculatedSchemaForValidation(fromUnit)
 
     const form = useForm<z.infer<typeof calculatedSchema>>({
       resolver: zodResolver(calculatedSchema),
@@ -37,30 +43,20 @@ function ServerOnly(props: Props) {
       },
     });
 
-  // For non-JS fallback
-  function onSubmitNoJS(e: React.FormEvent<HTMLFormElement>) {
-    // This will be handled by the server if JS is disabled
-    // The form will submit and reload the page with the new URL parameters
-  }
-
   return (
-    <Tabs {...tabProps}  className="w-full">
-        <TabsList className="grid grid-cols-4 mb-6">
-            <TabsTrigger value={UNIT_TYPES.LENGTH}>Length</TabsTrigger>
-            <TabsTrigger value={UNIT_TYPES.TEMPERATURE}>Temperature</TabsTrigger>
-            <TabsTrigger value={UNIT_TYPES.WEIGHT}>Weight</TabsTrigger>
-            <TabsTrigger value={UNIT_TYPES.CURRENCY}>Currency</TabsTrigger>
-        </TabsList>
-
+    <Tabs  className="w-full">
         <Form {...form}>
             <form
-              onSubmit={(e) => {
-                onSubmitNoJS(e)
-              }}
               className="space-y-6"
-              action={`?type=${unitType}`}
-              method="get"
+              action={props.submitFormAction}
+              method="post"
             >
+        <TabsList className="grid grid-cols-4 mb-6">
+            <TabsTrigger value={UNIT_TYPES.LENGTH} name={UNIT_TYPES.LENGTH} type='submit'>Length</TabsTrigger>
+            <TabsTrigger value={UNIT_TYPES.TEMPERATURE} name={UNIT_TYPES.TEMPERATURE} type='submit'>Temperature</TabsTrigger>
+            <TabsTrigger value={UNIT_TYPES.WEIGHT} name={UNIT_TYPES.WEIGHT} type='submit'>Weight</TabsTrigger>
+            <TabsTrigger value={UNIT_TYPES.CURRENCY} name={UNIT_TYPES.CURRENCY} type='submit'>Currency</TabsTrigger>
+        </TabsList>
               {/* Hidden inputs for non-JS form submission */}
               <input type="hidden" name={QUERY_PARAMS.TYPE} value={unitType} />
 
@@ -119,23 +115,15 @@ function ServerOnly(props: Props) {
                 )}
               />
 
-              {/* <div className="p-4 bg-muted rounded-md text-center">
-                {isLoading ? (
-                  <div className="animate-pulse">Converting...</div>
-                ) : result !== null ? (
-                  <div className="text-xl font-semibold">
-                    {form.getValues("fromValue")} {fromUnit} ={" "}
+            {result && (<div className="text-xl font-semibold">
+                    {value} {fromUnit} ={" "}
                     {result.toLocaleString(undefined, {
                       maximumFractionDigits: 6,
                       minimumFractionDigits: 0,
                     })}{" "}
                     {toUnit}
-                  </div>
-                ) : (
-                  <div className="text-muted-foreground">Conversion result will appear here</div>
-                )}
-              </div> */}
-
+                </div>
+)}
               {/* Submit button for non-JS fallback */}
               <noscript>
                 <button type="submit" className="w-full py-2 px-4 bg-primary text-primary-foreground rounded-md">

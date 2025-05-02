@@ -20,8 +20,9 @@ import { QUERY_PARAMS } from "@/constants/query-params"
 import UnitOptions from "./ui-options"
 import { getCalculatedSchemaForValidation } from "@/utils"
 import ServerOnly from "./server-only"
+import { PageProps } from "@/app/page"
 
-export default function UnitConverter() {
+export default function UnitConverter(props: PageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [unitType, setUnitType] = useAtom(unitTypeAtom)
@@ -140,7 +141,7 @@ export default function UnitConverter() {
         <CardDescription>Convert between different units</CardDescription>
       </CardHeader>
       <CardContent>
-        {typeof window === "undefined" ? <ServerOnly tabProps={{defaultValue: unitType ?? UNIT_TYPES.LENGTH}} /> : <Tabs
+        {typeof window === "undefined" ? <ServerOnly {...props} /> : <Tabs
           value={unitType}
           onValueChange={(value) => {
             setUnitType(value)
@@ -159,14 +160,8 @@ export default function UnitConverter() {
             <form
               onSubmit={(e) => {
                 form.handleSubmit(onSubmit)(e)
-                // For non-JS fallback
-                if (typeof window === "undefined") {
-                  onSubmitNoJS(e)
-                }
               }}
               className="space-y-6"
-              action={`?type=${unitType}`}
-              method="get"
             >
               {/* Hidden inputs for non-JS form submission */}
               <input type="hidden" name={QUERY_PARAMS.TYPE} value={unitType} />
