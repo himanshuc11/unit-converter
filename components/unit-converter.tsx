@@ -23,28 +23,17 @@ import { getCalculatedSchemaForValidation } from "@/utils"
 export default function UnitConverter() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [unitType, setUnitType] = useAtom(unitTypeAtom)
 
   // Get initial values from URL if available
-  const initialUnitType = searchParams.get(QUERY_PARAMS.TYPE) || UNIT_TYPES.LENGTH
+  const initialUnitType = unitType
   const initialFromValue = searchParams.get(QUERY_PARAMS.VALUE) ? Number.parseFloat(searchParams.get(QUERY_PARAMS.VALUE) as string) : 0
   const initialFromUnit = searchParams.get(QUERY_PARAMS.FROM) || ""
   const initialToUnit = searchParams.get(QUERY_PARAMS.TO) || ""
 
+  const [currentFormUnit, setCurrentFormUnit] = useState(initialFromUnit)
 
-  const [unitType, setUnitType] = useAtom(unitTypeAtom)
-  const [fromUnit, setFromUnit] = useAtom(fromUnitAtom)
-  const [toUnit, setToUnit] = useAtom(toUnitAtom)
-  const [result, setResult] = useState<number | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
-
-  const calculatedSchema = getCalculatedSchemaForValidation(fromUnit);
-
-  // Initialize state from URL params
-  useEffect(() => {
-    setUnitType(initialUnitType)
-    setFromUnit(initialFromUnit)
-    setToUnit(initialToUnit)
-  }, [searchParams])
+  const calculatedSchema = getCalculatedSchemaForValidation(currentFormUnit)
 
   const form = useForm<z.infer<typeof calculatedSchema>>({
     resolver: zodResolver(calculatedSchema),
@@ -54,6 +43,31 @@ export default function UnitConverter() {
       toUnit: initialToUnit,
     },
   });
+  const fromUnit = form.getValues("fromUnit")
+  const setFromUnit = (newFormUnit: string) => {
+    form.setValue("fromUnit", newFormUnit)
+  }  
+
+  const toUnit = form.getValues("toUnit") 
+  const setToUnit = (newToUnit: string) => {
+    form.setValue("toUnit", newToUnit)
+  }
+
+  const [result, setResult] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
+  useEffect(() => {
+    setCurrentFormUnit(fromUnit)
+  }, [fromUnit])
+
+
+  // Initialize state from URL params
+  useEffect(() => {
+    setFromUnit(initialFromUnit)
+    setToUnit(initialToUnit)
+  }, [searchParams])
+
+
 
   // Update form validation when schema changes
   useEffect(() => {
