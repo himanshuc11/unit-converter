@@ -179,9 +179,7 @@ export default function UnitConverter() {
                             field.onChange(e)
                             // Auto-convert on value change if both units are selected
                             if (fromUnit && toUnit) {
-                              setTimeout(() => form.handleSubmit(onSubmit)(), 100)
-                              // Update URL
-                              updateUrl(unitType, Number.parseFloat(e.target.value) || 0, fromUnit, toUnit)
+                              form.handleSubmit(onSubmit)()
                             }
                           }}
                           className={form.formState.errors.fromValue ? "border-destructive" : ""}
@@ -208,7 +206,7 @@ export default function UnitConverter() {
                           updateUrl(unitType, form.getValues("fromValue"), value, toUnit)
                           // Auto-convert if both units are selected and we have a value
                           if (toUnit && form.getValues("fromValue")) {
-                            setTimeout(() => form.handleSubmit(onSubmit)(), 100)
+                            form.handleSubmit(onSubmit)()
                           }
                         }}
                         value={fromUnit}
@@ -245,7 +243,7 @@ export default function UnitConverter() {
                         updateUrl(unitType, form.getValues("fromValue"), fromUnit, value)
                         // Auto-convert if both units are selected and we have a value
                         if (fromUnit && form.getValues("fromValue")) {
-                          setTimeout(() => form.handleSubmit(onSubmit)(), 100)
+                          form.handleSubmit(onSubmit)()
                         }
                       }}
                       value={toUnit}
