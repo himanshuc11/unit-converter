@@ -13,95 +13,86 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { unitTypeAtom, fromUnitAtom, toUnitAtom } from "@/lib/atoms"
+import { unitTypeAtom } from "@/lib/atoms"
 import { convertUnit } from "@/lib/converter"
 import { UNIT_TYPES } from "@/constants/unit-types"
 import { QUERY_PARAMS } from "@/constants/query-params"
 import UnitOptions from "./ui-options"
-
-
-// Server-side validation schema
-const formSchema = z.object({
-  fromValue: z.coerce
-    .number({
-      required_error: "Value is required",
-      invalid_type_error: "Value must be a number",
-    })
-    .refine((val) => !isNaN(val), {
-      message: "Value must be a number",
-    }),
-  fromUnit: z.string().min(1, { message: "Please select a unit" }),
-  toUnit: z.string().min(1, { message: "Please select a unit" }),
-})
+import { getCalculatedSchemaForValidation } from "@/utils"
 
 export default function UnitConverter() {
   const router = useRouter()
   const searchParams = useSearchParams()
+  const [unitType, setUnitType] = useAtom(unitTypeAtom)
 
   // Get initial values from URL if available
-  const initialUnitType = searchParams.get(QUERY_PARAMS.TYPE) || UNIT_TYPES.LENGTH
-  const initialFromValue = searchParams.get(QUERY_PARAMS.VALUE) ? Number.parseFloat(searchParams.get(QUERY_PARAMS.FROM) as string) : 0
+  const initialFromValue = searchParams.get(QUERY_PARAMS.VALUE) ? Number.parseFloat(searchParams.get(QUERY_PARAMS.VALUE) as string) : 0
   const initialFromUnit = searchParams.get(QUERY_PARAMS.FROM) || ""
   const initialToUnit = searchParams.get(QUERY_PARAMS.TO) || ""
 
-  const [unitType, setUnitType] = useAtom(unitTypeAtom)
-  const [fromUnit, setFromUnit] = useAtom(fromUnitAtom)
-  const [toUnit, setToUnit] = useAtom(toUnitAtom)
-  const [result, setResult] = useState<number | null>(null)
-  const [isLoading, setIsLoading] = useState(false)
+  const [currentFormUnit, setCurrentFormUnit] = useState(initialFromUnit)
+  const calculatedSchema = getCalculatedSchemaForValidation(currentFormUnit)
 
-  // Initialize state from URL params
-  useEffect(() => {
-    setUnitType(initialUnitType)
-    setFromUnit(initialFromUnit)
-    setToUnit(initialToUnit)
-  }, [initialUnitType, initialFromUnit, initialToUnit, setUnitType, setFromUnit, setToUnit])
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof calculatedSchema>>({
+    resolver: zodResolver(calculatedSchema),
     defaultValues: {
       fromValue: initialFromValue,
       fromUnit: initialFromUnit,
       toUnit: initialToUnit,
     },
-  })
+  });
+  const fromUnit = form.getValues("fromUnit")
+  const setFromUnit = (newFormUnit: string) => {
+    form.setValue("fromUnit", newFormUnit)
+  }  
 
-  // Reset form when unit type changes
+  const toUnit = form.getValues("toUnit") 
+  const setToUnit = (newToUnit: string) => {
+    form.setValue("toUnit", newToUnit)
+  }
+
+  const [result, setResult] = useState<number | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+
   useEffect(() => {
-    form.reset({
-      fromValue: form.getValues("fromValue"),
-      fromUnit: "",
-      toUnit: "",
-    })
-    setFromUnit("")
-    setToUnit("")
-    setResult(null)
+    setCurrentFormUnit(fromUnit)
+  }, [fromUnit])
 
-    // Update URL
-    updateUrl(unitType, form.getValues("fromValue"), "", "")
-  }, [unitType, form])
 
-  // Update form values when units change
+  // Initialize state from URL params
   useEffect(() => {
+    setFromUnit(initialFromUnit)
+    setToUnit(initialToUnit)
+  }, [searchParams])
+
+
+  // Update form validation when schema changes
+  useEffect(() => {
+    form.clearErrors()
     form.setValue("fromUnit", fromUnit)
-    form.setValue("toUnit", toUnit)
-
-    // Update URL when units change
-    if (fromUnit || toUnit) {
-      updateUrl(unitType, form.getValues("fromValue"), fromUnit, toUnit)
-    }
-  }, [fromUnit, toUnit, form, unitType])
+  }, [calculatedSchema, form, fromUnit]);
 
   // Update URL with current state
   const updateUrl = (type: string, value: number, from: string, to: string) => {
     const params = new URLSearchParams()
-    params.set(QUERY_PARAMS.TYPE, type)
-    if (value) params.set(QUERY_PARAMS.VALUE, value.toString())
-    if (from) params.set(QUERY_PARAMS.FROM, from)
-    if (to) params.set(QUERY_PARAMS.TO, to)
+
+    !!type ? params.set(QUERY_PARAMS.TYPE, type) : params.delete(QUERY_PARAMS.TYPE)
+    !!value ? params.set(QUERY_PARAMS.VALUE, value.toString()) : params.delete(QUERY_PARAMS.VALUE)
+    !!from ? params.set(QUERY_PARAMS.FROM, from) : params.delete(QUERY_PARAMS.FROM)
+    !!to ? params.set(QUERY_PARAMS.TO, to) : params.delete(QUERY_PARAMS.TO)
 
     // Replace current URL with new params
     router.replace(`?${params.toString()}`, { scroll: false })
+  }
+
+
+  const resetFormAndUrl = (tab: string) => {
+    form.reset({
+      fromValue: 0,
+      fromUnit: "",
+      toUnit: ""
+    })
+    updateUrl(tab, 0, "", "")
   }
 
   // Perform initial conversion if all parameters are present
@@ -109,7 +100,6 @@ export default function UnitConverter() {
     if (initialFromValue && initialFromUnit && initialToUnit) {
       handleConversion(initialFromValue, initialFromUnit, initialToUnit)
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [initialFromValue, initialFromUnit, initialToUnit])
 
   async function handleConversion(value: number, from: string, to: string) {
@@ -118,13 +108,18 @@ export default function UnitConverter() {
       const convertedValue = await convertUnit(unitType, from, to, value)
       setResult(convertedValue)
     } catch (error) {
-      console.error("Conversion error:", error)
+      if (error instanceof Error) {
+        form.setError("fromValue", { message: error.message })
+      }
+      else {
+        console.error("Conversion error:", error)
+      }
     } finally {
       setIsLoading(false)
     }
   }
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof calculatedSchema>) {
     await handleConversion(values.fromValue, values.fromUnit, values.toUnit)
     // Update URL with current state
     updateUrl(unitType, values.fromValue, values.fromUnit, values.toUnit)
@@ -143,10 +138,12 @@ export default function UnitConverter() {
         <CardDescription>Convert between different units</CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs
-          defaultValue={initialUnitType}
+        {typeof window === "undefined" ? null : <Tabs
           value={unitType}
-          onValueChange={(value) => setUnitType(value)}
+          onValueChange={(value) => {
+            setUnitType(value)
+            resetFormAndUrl(value)
+          }}
           className="w-full"
         >
           <TabsList className="grid grid-cols-4 mb-6">
@@ -190,9 +187,7 @@ export default function UnitConverter() {
                             field.onChange(e)
                             // Auto-convert on value change if both units are selected
                             if (fromUnit && toUnit) {
-                              setTimeout(() => form.handleSubmit(onSubmit)(), 100)
-                              // Update URL
-                              updateUrl(unitType, Number.parseFloat(e.target.value) || 0, fromUnit, toUnit)
+                              form.handleSubmit(onSubmit)()
                             }
                           }}
                           className={form.formState.errors.fromValue ? "border-destructive" : ""}
@@ -214,10 +209,12 @@ export default function UnitConverter() {
                       <Select
                         onValueChange={(value) => {
                           setFromUnit(value)
+                          form.setValue("fromUnit", value)
                           field.onChange(value)
+                          updateUrl(unitType, form.getValues("fromValue"), value, toUnit)
                           // Auto-convert if both units are selected and we have a value
                           if (toUnit && form.getValues("fromValue")) {
-                            setTimeout(() => form.handleSubmit(onSubmit)(), 100)
+                            form.handleSubmit(onSubmit)()
                           }
                         }}
                         value={fromUnit}
@@ -249,10 +246,12 @@ export default function UnitConverter() {
                     <Select
                       onValueChange={(value) => {
                         setToUnit(value)
+                        form.setValue("toUnit", value)
                         field.onChange(value)
+                        updateUrl(unitType, form.getValues("fromValue"), fromUnit, value)
                         // Auto-convert if both units are selected and we have a value
                         if (fromUnit && form.getValues("fromValue")) {
-                          setTimeout(() => form.handleSubmit(onSubmit)(), 100)
+                          form.handleSubmit(onSubmit)()
                         }
                       }}
                       value={toUnit}
@@ -297,7 +296,7 @@ export default function UnitConverter() {
               </noscript>
             </form>
           </Form>
-        </Tabs>
+        </Tabs>}
       </CardContent>
     </Card>
   )
