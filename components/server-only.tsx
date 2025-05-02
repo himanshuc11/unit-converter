@@ -12,7 +12,7 @@ const Option = ({ value, children }: { value: string, children: React.ReactNode 
 }
 
 function ServerOnly(props: PageProps) {
-  const { requiredParam: searchParams, result, submitFormAction } = props
+  const { requiredParam: searchParams, result, submitFormAction, submitUnitTypeAction } = props
 
   const type = searchParams?.[QUERY_PARAMS.TYPE]?.toUpperCase() as keyof typeof UNIT_TYPES;
   const unitType =  type && UNIT_TYPES[type] !== undefined 
@@ -25,20 +25,18 @@ function ServerOnly(props: PageProps) {
 
   return (
     <Tabs className="w-full">
-      <form
-        className="space-y-6"
-        action={submitFormAction}
-        method="post"
-      >
+      <form method='post' action={submitUnitTypeAction}>
         <TabsList className="grid grid-cols-4 mb-6">
           <TabsTrigger value={UNIT_TYPES.LENGTH} name={UNIT_TYPES.LENGTH} type='submit'>Length</TabsTrigger>
           <TabsTrigger value={UNIT_TYPES.TEMPERATURE} name={UNIT_TYPES.TEMPERATURE} type='submit'>Temperature</TabsTrigger>
           <TabsTrigger value={UNIT_TYPES.WEIGHT} name={UNIT_TYPES.WEIGHT} type='submit'>Weight</TabsTrigger>
           <TabsTrigger value={UNIT_TYPES.CURRENCY} name={UNIT_TYPES.CURRENCY} type='submit'>Currency</TabsTrigger>
         </TabsList>
-
-        <input type="hidden" name={QUERY_PARAMS.TYPE} value={unitType} />
-
+      </form>
+      <form
+        action={submitFormAction}
+        method="post"
+      >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="flex mb-2">

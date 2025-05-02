@@ -128,12 +128,6 @@ export default function UnitConverter(props: PageProps) {
     updateUrl(unitType, values.fromValue, values.fromUnit, values.toUnit)
   }
 
-  // For non-JS fallback
-  function onSubmitNoJS(e: React.FormEvent<HTMLFormElement>) {
-    // This will be handled by the server if JS is disabled
-    // The form will submit and reload the page with the new URL parameters
-  }
-
   return (
     <Card className="w-full max-w-md shadow-lg">
       <CardHeader>
@@ -271,7 +265,7 @@ export default function UnitConverter(props: PageProps) {
               <div className="p-4 bg-muted rounded-md text-center">
                 {isLoading ? (
                   <div className="animate-pulse">Converting...</div>
-                ) : result !== null ? (
+                ) : result !== null && !form.formState.errors?.fromValue && fromUnit && toUnit ? (
                   <div className="text-xl font-semibold">
                     {form.getValues("fromValue")} {fromUnit} ={" "}
                     {result.toLocaleString(undefined, {

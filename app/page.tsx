@@ -1,16 +1,18 @@
-import { submitFormAction } from "@/actions"
+import { submitFormAction, submitUnitTypeAction } from "@/actions"
 import UnitConverter from "@/components/unit-converter"
 import { QUERY_PARAMS } from "@/constants/query-params"
 import { UNIT_TYPES } from "@/constants/unit-types"
 import { convertUnit } from "@/lib/converter"
 import { UnitType } from "@/types"
+import { redirect } from "next/navigation"
 import { Suspense } from "react"
 
 
 export type PageProps = {
   submitFormAction: (formData: FormData) => void,
   result: number,
-  requiredParam: { [key: string]: string | undefined } 
+  requiredParam: { [key: string]: string | undefined },
+  submitUnitTypeAction: (formData: FormData) => void,
 }
 
 type SearchParamsProps = {
@@ -29,12 +31,15 @@ export default async function Home({ searchParams }: SearchParamsProps) {
   const toUnit = requiredParam?.[QUERY_PARAMS.TO] as string
   const value = parseFloat(requiredParam?.[QUERY_PARAMS.VALUE] as string)
 
-  let result =  await convertUnit(unitType, fromUnit, toUnit, value)
+  let result = 0;
+  if(fromUnit && toUnit && value && unitType) {
+    result =  await convertUnit(unitType, fromUnit, toUnit, value)
+  }
 
   return (
     <main className="min-h-[calc(100vh-4rem)] p-4 md:p-8 lg:p-12 flex items-center justify-center">
       <Suspense>
-        <UnitConverter submitFormAction={submitFormAction} result={result} requiredParam={requiredParam} />
+        <UnitConverter submitFormAction={submitFormAction} result={result} requiredParam={requiredParam} submitUnitTypeAction={submitUnitTypeAction} />
       </Suspense>
     </main>
   )
