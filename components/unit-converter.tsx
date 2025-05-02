@@ -108,7 +108,12 @@ export default function UnitConverter() {
       const convertedValue = await convertUnit(unitType, from, to, value)
       setResult(convertedValue)
     } catch (error) {
-      console.error("Conversion error:", error)
+      if (error instanceof Error) {
+        form.setError("fromValue", { message: error.message })
+      }
+      else {
+        console.error("Conversion error:", error)
+      }
     } finally {
       setIsLoading(false)
     }
