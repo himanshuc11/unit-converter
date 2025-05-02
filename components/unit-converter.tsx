@@ -18,21 +18,7 @@ import { convertUnit } from "@/lib/converter"
 import { UNIT_TYPES } from "@/constants/unit-types"
 import { QUERY_PARAMS } from "@/constants/query-params"
 import UnitOptions from "./ui-options"
-
-
-// Server-side validation schema
-const formSchema = z.object({
-  fromValue: z.coerce
-    .number({
-      required_error: "Value is required",
-      invalid_type_error: "Value must be a number",
-    })
-    .refine((val) => !isNaN(val), {
-      message: "Value must be a number",
-    }),
-  fromUnit: z.string().min(1, { message: "Please select a unit" }),
-  toUnit: z.string().min(1, { message: "Please select a unit" }),
-})
+import { getCalculatedSchemaForValidation } from "@/utils"
 
 export default function UnitConverter() {
   const router = useRouter()
@@ -51,6 +37,8 @@ export default function UnitConverter() {
   const [result, setResult] = useState<number | null>(null)
   const [isLoading, setIsLoading] = useState(false)
 
+  const calculatedSchema = getCalculatedSchemaForValidation(fromUnit);
+
   // Initialize state from URL params
   useEffect(() => {
     setUnitType(initialUnitType)
@@ -58,8 +46,8 @@ export default function UnitConverter() {
     setToUnit(initialToUnit)
   }, [searchParams])
 
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
+  const form = useForm<z.infer<typeof calculatedSchema>>({
+    resolver: zodResolver(calculatedSchema),
     defaultValues: {
       fromValue: initialFromValue,
       fromUnit: initialFromUnit,
@@ -67,6 +55,11 @@ export default function UnitConverter() {
     },
   });
 
+  // Update form validation when schema changes
+  useEffect(() => {
+    form.clearErrors()
+    form.setValue("fromUnit", fromUnit)
+  }, [calculatedSchema, form, fromUnit]);
 
   // Update URL with current state
   const updateUrl = (type: string, value: number, from: string, to: string) => {
@@ -110,7 +103,7 @@ export default function UnitConverter() {
     }
   }
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof calculatedSchema>) {
     await handleConversion(values.fromValue, values.fromUnit, values.toUnit)
     // Update URL with current state
     updateUrl(unitType, values.fromValue, values.fromUnit, values.toUnit)
