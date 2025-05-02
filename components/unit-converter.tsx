@@ -19,8 +19,10 @@ import { UNIT_TYPES } from "@/constants/unit-types"
 import { QUERY_PARAMS } from "@/constants/query-params"
 import UnitOptions from "./ui-options"
 import { getCalculatedSchemaForValidation } from "@/utils"
+import ServerOnly from "./server-only"
+import { PageProps } from "@/app/page"
 
-export default function UnitConverter() {
+export default function UnitConverter(props: PageProps) {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [unitType, setUnitType] = useAtom(unitTypeAtom)
@@ -41,6 +43,7 @@ export default function UnitConverter() {
       toUnit: initialToUnit,
     },
   });
+
   const fromUnit = form.getValues("fromUnit")
   const setFromUnit = (newFormUnit: string) => {
     form.setValue("fromUnit", newFormUnit)
@@ -125,12 +128,6 @@ export default function UnitConverter() {
     updateUrl(unitType, values.fromValue, values.fromUnit, values.toUnit)
   }
 
-  // For non-JS fallback
-  function onSubmitNoJS(e: React.FormEvent<HTMLFormElement>) {
-    // This will be handled by the server if JS is disabled
-    // The form will submit and reload the page with the new URL parameters
-  }
-
   return (
     <Card className="w-full max-w-md shadow-lg">
       <CardHeader>
@@ -138,7 +135,7 @@ export default function UnitConverter() {
         <CardDescription>Convert between different units</CardDescription>
       </CardHeader>
       <CardContent>
-        {typeof window === "undefined" ? null : <Tabs
+        {typeof window === "undefined" ? <ServerOnly {...props} /> : <Tabs
           value={unitType}
           onValueChange={(value) => {
             setUnitType(value)
@@ -157,14 +154,8 @@ export default function UnitConverter() {
             <form
               onSubmit={(e) => {
                 form.handleSubmit(onSubmit)(e)
-                // For non-JS fallback
-                if (typeof window === "undefined") {
-                  onSubmitNoJS(e)
-                }
               }}
               className="space-y-6"
-              action={`?type=${unitType}`}
-              method="get"
             >
               {/* Hidden inputs for non-JS form submission */}
               <input type="hidden" name={QUERY_PARAMS.TYPE} value={unitType} />
@@ -274,7 +265,7 @@ export default function UnitConverter() {
               <div className="p-4 bg-muted rounded-md text-center">
                 {isLoading ? (
                   <div className="animate-pulse">Converting...</div>
-                ) : result !== null ? (
+                ) : result !== null && !form.formState.errors?.fromValue && fromUnit && toUnit ? (
                   <div className="text-xl font-semibold">
                     {form.getValues("fromValue")} {fromUnit} ={" "}
                     {result.toLocaleString(undefined, {
