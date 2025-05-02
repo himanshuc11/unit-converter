@@ -6,14 +6,13 @@ import { Input } from "@/components/ui/input"
 import UnitOptions from './ui-options'
 import { PageProps } from '@/app/page'
 import { UnitType } from '@/types'
-import { convertUnit } from '@/lib/converter'
 
-const Option = ({children}: {children: React.ReactElement}) => {
-  return <option className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">{children}</option>
+const Option = ({ value, children }: { value: string, children: React.ReactNode }) => {
+  return <option value={value} className="relative flex w-full cursor-default select-none items-center rounded-sm py-1.5 pl-8 pr-2 text-sm outline-none focus:bg-accent focus:text-accent-foreground data-[disabled]:pointer-events-none data-[disabled]:opacity-50">{children}</option>
 }
 
 function ServerOnly(props: PageProps) {
-  const { requiredParam: searchParams, result } = props
+  const { requiredParam: searchParams, result, submitFormAction } = props
 
   const type = searchParams?.[QUERY_PARAMS.TYPE]?.toUpperCase() as keyof typeof UNIT_TYPES;
   const unitType =  type && UNIT_TYPES[type] !== undefined 
@@ -24,12 +23,11 @@ function ServerOnly(props: PageProps) {
   const toUnit = searchParams?.[QUERY_PARAMS.TO] as string
   const value = parseFloat(searchParams?.[QUERY_PARAMS.VALUE] as string)
 
-
   return (
     <Tabs className="w-full">
       <form
         className="space-y-6"
-        action={props.submitFormAction}
+        action={submitFormAction}
         method="post"
       >
         <TabsList className="grid grid-cols-4 mb-6">

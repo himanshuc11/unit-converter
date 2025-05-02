@@ -13,7 +13,11 @@ function UnitOptions({ type, RenderItem = SelectItem }: UnitOptionsProps) {
     const options: Record<string, string | undefined> = OPTIONS[type] ?? {}
     const optionList = Object.keys(options)
 
-    const optionItems = optionList.map(optionId => <RenderItem key={optionId} value={optionId}>{options[optionId]}</RenderItem>)
+    const optionItems = optionList.map(optionId => 
+        <RenderItem key={optionId} value={optionId}>
+            {options[optionId]}
+        </RenderItem>
+    )
     return optionItems ?? []    
 }
   
