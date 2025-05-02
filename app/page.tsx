@@ -10,7 +10,7 @@ import { Suspense } from "react"
 
 export type PageProps = {
   submitFormAction: (formData: FormData) => void,
-  result: number,
+  result: number | null,
   requiredParam: { [key: string]: string | undefined },
   submitUnitTypeAction: (formData: FormData) => void,
 }
@@ -31,7 +31,7 @@ export default async function Home({ searchParams }: SearchParamsProps) {
   const toUnit = requiredParam?.[QUERY_PARAMS.TO] as string
   const value = parseFloat(requiredParam?.[QUERY_PARAMS.VALUE] as string)
 
-  let result = 0;
+  let result = null;
   if(fromUnit && toUnit && value && unitType) {
     result =  await convertUnit(unitType, fromUnit, toUnit, value)
   }
