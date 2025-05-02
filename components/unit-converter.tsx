@@ -13,7 +13,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { unitTypeAtom, fromUnitAtom, toUnitAtom } from "@/lib/atoms"
+import { unitTypeAtom } from "@/lib/atoms"
 import { convertUnit } from "@/lib/converter"
 import { UNIT_TYPES } from "@/constants/unit-types"
 import { QUERY_PARAMS } from "@/constants/query-params"
@@ -26,13 +26,11 @@ export default function UnitConverter() {
   const [unitType, setUnitType] = useAtom(unitTypeAtom)
 
   // Get initial values from URL if available
-  const initialUnitType = unitType
   const initialFromValue = searchParams.get(QUERY_PARAMS.VALUE) ? Number.parseFloat(searchParams.get(QUERY_PARAMS.VALUE) as string) : 0
   const initialFromUnit = searchParams.get(QUERY_PARAMS.FROM) || ""
   const initialToUnit = searchParams.get(QUERY_PARAMS.TO) || ""
 
   const [currentFormUnit, setCurrentFormUnit] = useState(initialFromUnit)
-
   const calculatedSchema = getCalculatedSchemaForValidation(currentFormUnit)
 
   const form = useForm<z.infer<typeof calculatedSchema>>({
@@ -66,7 +64,6 @@ export default function UnitConverter() {
     setFromUnit(initialFromUnit)
     setToUnit(initialToUnit)
   }, [searchParams])
-
 
 
   // Update form validation when schema changes
@@ -136,8 +133,7 @@ export default function UnitConverter() {
         <CardDescription>Convert between different units</CardDescription>
       </CardHeader>
       <CardContent>
-        <Tabs
-          defaultValue={initialUnitType}
+        {typeof window === "undefined" ? null : <Tabs
           value={unitType}
           onValueChange={(value) => {
             setUnitType(value)
@@ -295,7 +291,7 @@ export default function UnitConverter() {
               </noscript>
             </form>
           </Form>
-        </Tabs>
+        </Tabs>}
       </CardContent>
     </Card>
   )

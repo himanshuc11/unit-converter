@@ -10,8 +10,6 @@ export const unitTypeAtom = atom<UnitType>(
     typeof window === 'undefined' ? UNIT_TYPES.LENGTH : (() => {
         const params = new URLSearchParams(window.location.search);
         const type = params.get('type')?.toUpperCase() as keyof typeof UNIT_TYPES;
-
-        console.log('::Tyoe',  )
         
         return type && UNIT_TYPES[type] !== undefined 
             ? UNIT_TYPES[type] as UnitType 
