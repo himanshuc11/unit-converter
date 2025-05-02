@@ -174,6 +174,7 @@ export default function UnitConverter(props: PageProps) {
                           placeholder="Enter value"
                           {...field}
                           name={QUERY_PARAMS.VALUE}
+                          type="number"
                           onChange={(e) => {
                             field.onChange(e)
                             // Auto-convert on value change if both units are selected
@@ -267,7 +268,10 @@ export default function UnitConverter(props: PageProps) {
                   <div className="animate-pulse">Converting...</div>
                 ) : result !== null && !form.formState.errors?.fromValue && fromUnit && toUnit ? (
                   <div className="text-xl font-semibold">
-                    {form.getValues("fromValue")} {fromUnit} ={" "}
+                    {Number(form.getValues("fromValue")).toLocaleString(undefined, {
+                      maximumFractionDigits: 6,
+                      minimumFractionDigits: 0,
+                    })} {fromUnit} ={" "}
                     {result.toLocaleString(undefined, {
                       maximumFractionDigits: 6,
                       minimumFractionDigits: 0,
