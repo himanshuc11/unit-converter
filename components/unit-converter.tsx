@@ -19,6 +19,7 @@ import { UNIT_TYPES } from "@/constants/unit-types"
 import { QUERY_PARAMS } from "@/constants/query-params"
 import UnitOptions from "./ui-options"
 import { getCalculatedSchemaForValidation } from "@/utils"
+import ServerOnly from "./server-only"
 
 export default function UnitConverter() {
   const router = useRouter()
@@ -41,6 +42,7 @@ export default function UnitConverter() {
       toUnit: initialToUnit,
     },
   });
+
   const fromUnit = form.getValues("fromUnit")
   const setFromUnit = (newFormUnit: string) => {
     form.setValue("fromUnit", newFormUnit)
@@ -138,7 +140,7 @@ export default function UnitConverter() {
         <CardDescription>Convert between different units</CardDescription>
       </CardHeader>
       <CardContent>
-        {typeof window === "undefined" ? null : <Tabs
+        {typeof window === "undefined" ? <ServerOnly tabProps={{defaultValue: unitType ?? UNIT_TYPES.LENGTH}} /> : <Tabs
           value={unitType}
           onValueChange={(value) => {
             setUnitType(value)
