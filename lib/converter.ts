@@ -98,7 +98,7 @@ export async function convertUnit(unitType: string, fromUnit: string, toUnit: st
   // Handle currency conversion
   if (unitType === UNIT_TYPES.CURRENCY) {
     const rates = await fetchCurrencyRates(fromUnit)
-    return value * rates[toUnit.toUpperCase()]
+    return value * (rates[toUnit.toUpperCase()] ?? rates[toUnit])
   }
 
   // Handle standard conversions (length, weight)
