@@ -8,6 +8,7 @@ import { redirect } from "next/navigation";
 
 export async function submitFormAction(formData: FormData) {
     const type = formData.get('type')?.toString().toUpperCase() as keyof typeof UNIT_TYPES;
+
     const unitType = type && UNIT_TYPES[type] !== undefined 
         ? UNIT_TYPES[type] as UnitType 
         : UNIT_TYPES.LENGTH;

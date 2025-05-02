@@ -38,6 +38,7 @@ function ServerOnly(props: PageProps) {
         method="post"
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <input type='hidden' name='type' value={unitType} />
           <div>
             <label className="flex mb-2">
               Value <span className="text-destructive ml-1">*</span>
